@@ -53,20 +53,22 @@ class Module implements
     {
         /* @var $response \Zend\Http\Response */
         $response = $event->getResponse();
-        if (!method_exists($response, 'getStatusCode') || $response->getStatusCode() !== 404) {
+        if (!method_exists($response, 'getStatusCode') || $response->getStatusCode() !== 404)
+            // Unknown Response
             return;
-        }
+
         $request        = $event->getRequest();
         $serviceManager = $event->getApplication()->getServiceManager();
+        /** @var AssetManager $assetManager */
         $assetManager   = $serviceManager->get(__NAMESPACE__ . '\Service\AssetManager');
-
-        if (!$assetManager->resolvesToAsset($request)) {
+        if (!$assetManager->resolvesToAsset($request))
+            // This is not a registered asset
             return;
-        }
 
         $response->setStatusCode(200);
+        $assetManager->setAssetOnResponse($response);
 
-        return $assetManager->setAssetOnResponse($response);
+        $event->setResult($response);
     }
 
     /**
