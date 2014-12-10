@@ -80,9 +80,8 @@ class Module implements
         /* @var $eventManager \Zend\EventManager\EventManagerInterface */
         $eventManager = $event->getTarget()->getEventManager();
         $callback     = array($this, 'onDispatch');
-        $priority     = -9999999;
-        $eventManager->attach(MvcEvent::EVENT_DISPATCH, $callback, $priority);
-        $eventManager->attach(MvcEvent::EVENT_DISPATCH_ERROR, $callback, $priority);
+        $priority     = -1000;
+        $eventManager->attach('error', $callback, $priority);
     }
 
     /**
