@@ -2,6 +2,7 @@
 
 namespace AssetManager;
 
+use AssetManager\Service\AssetManager;
 use Zend\Loader\StandardAutoloader;
 use Zend\Loader\AutoloaderFactory;
 use Zend\EventManager\EventInterface;
@@ -53,20 +54,22 @@ class Module implements
     {
         /* @var $response \Zend\Http\Response */
         $response = $event->getResponse();
-        if (!method_exists($response, 'getStatusCode') || $response->getStatusCode() !== 404) {
+        if (!method_exists($response, 'getStatusCode') || $response->getStatusCode() !== 404)
+            // Unknown Response
             return;
-        }
+
         $request        = $event->getRequest();
         $serviceManager = $event->getApplication()->getServiceManager();
+        /** @var AssetManager $assetManager */
         $assetManager   = $serviceManager->get(__NAMESPACE__ . '\Service\AssetManager');
-
-        if (!$assetManager->resolvesToAsset($request)) {
+        if (!$assetManager->resolvesToAsset($request))
+            // This is not a registered asset
             return;
-        }
 
         $response->setStatusCode(200);
+        $assetManager->setAssetOnResponse($response);
 
-        return $assetManager->setAssetOnResponse($response);
+        $event->setResult($response);
     }
 
     /**
@@ -78,9 +81,8 @@ class Module implements
         /* @var $eventManager \Zend\EventManager\EventManagerInterface */
         $eventManager = $event->getTarget()->getEventManager();
         $callback     = array($this, 'onDispatch');
-        $priority     = -9999999;
-        $eventManager->attach(MvcEvent::EVENT_DISPATCH, $callback, $priority);
-        $eventManager->attach(MvcEvent::EVENT_DISPATCH_ERROR, $callback, $priority);
+        $priority     = -1100;
+        $eventManager->attach('error', $callback, $priority);
     }
 
     /**
