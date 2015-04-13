@@ -2,13 +2,14 @@
 
 namespace AssetManager;
 
+use AssetManager\Service\AssetManager;
+use yimaBase\Mvc\MvcEvent;
 use Zend\Loader\StandardAutoloader;
 use Zend\Loader\AutoloaderFactory;
 use Zend\EventManager\EventInterface;
 use Zend\ModuleManager\Feature\ConfigProviderInterface;
 use Zend\ModuleManager\Feature\AutoloaderProviderInterface;
 use Zend\ModuleManager\Feature\BootstrapListenerInterface;
-use Zend\Mvc\MvcEvent;
 use Zend\Console\Adapter\AdapterInterface;
 
 /**
@@ -49,7 +50,7 @@ class Module implements
      *
      * @param MvcEvent $event
      */
-    public function onDispatch(MvcEvent $event)
+    public function onEventError(MvcEvent $event)
     {
         /* @var $response \Zend\Http\Response */
         $response = $event->getResponse();
@@ -79,9 +80,9 @@ class Module implements
         // Attach for dispatch, and dispatch.error (with low priority to make sure statusCode gets set)
         /* @var $eventManager \Zend\EventManager\EventManagerInterface */
         $eventManager = $event->getTarget()->getEventManager();
-        $callback     = array($this, 'onDispatch');
-        $priority     = -1000;
-        $eventManager->attach('error', $callback, $priority);
+        $callback     = array($this, 'onEventError');
+        $priority     = -1100;
+        $eventManager->attach(MvcEvent::EVENT_ERROR, $callback, $priority);
     }
 
     /**
