@@ -2,9 +2,12 @@
 
 namespace AssetManager\Resolver;
 
+use AssetManager\Asset\FileAsset;
 use Traversable;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceManager;
 use Zend\Stdlib\ArrayUtils;
-use Assetic\Asset\FileAsset;
 use Assetic\Asset\HttpAsset;
 use AssetManager\Exception;
 use AssetManager\Service\MimeResolver;
@@ -12,7 +15,10 @@ use AssetManager\Service\MimeResolver;
 /**
  * This resolver allows you to resolve using a 1 on 1 mapping to a file.
  */
-class MapResolver implements ResolverInterface, MimeResolverAwareInterface
+class MapResolver implements
+    ResolverInterface,
+    MimeResolverAwareInterface,
+    ServiceLocatorAwareInterface
 {
     /**
      * @var array
@@ -23,6 +29,11 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
      * @var MimeResolver The mime resolver.
      */
     protected $mimeResolver;
+
+    /**
+     * @var ServiceManager
+     */
+    protected $sl;
 
     /**
      * Constructor
@@ -101,10 +112,11 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
         }
 
         $file            = $this->map[$name];
-        $mimeType        = $this->getMimeResolver()->getMimeType($file);
+        $mimeType        = $this->getMimeResolver()->getMimeType($name);
 
         if (false === filter_var($file, FILTER_VALIDATE_URL)) {
             $asset = new FileAsset($file);
+            $asset->setServiceManager($this->getServiceLocator());
         } else {
             $asset = new HttpAsset($file);
         }
@@ -120,5 +132,25 @@ class MapResolver implements ResolverInterface, MimeResolverAwareInterface
     public function collect()
     {
         return array_keys($this->map);
+    }
+
+    /**
+     * Set service locator
+     *
+     * @param ServiceLocatorInterface $serviceLocator
+     */
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+    {
+        $this->sl = $serviceLocator;
+    }
+
+    /**
+     * Get service locator
+     *
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        return $this->sl;
     }
 }
